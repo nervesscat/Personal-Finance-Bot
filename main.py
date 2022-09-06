@@ -3,8 +3,7 @@ from functions import Functions
 import discord
 import os
 
-DISCORD_TOKEN = 'MTAwMTE0OTg3NTMwNTU5OTExOA.Gt6Hf9.VvBDg7SzDNbolj2obcjMq0LFQcMpXPhhgC-aJ4'
-#DISCORD_TOKEN = os.environ.get('DISCORD_ING')
+DISCORD_TOKEN = os.environ.get('DISCORD_FINANCE_BOT_TOKEN')
 
 func = Functions()
 client = discord.Client(intents=discord.Intents.default())
