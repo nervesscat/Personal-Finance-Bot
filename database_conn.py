@@ -51,6 +51,37 @@ class DataBase:
         self.cursor.execute(sql)
         return
 
+    def get_mensual_balance(self, username):
+        sql = "SELECT `income`, `expense`, date FROM `%s`" % username
+        self.cursor.execute(sql)
+        result = self.cursor.fetchall()
+        incomeAp = []
+        date = []
+        subT = 0
+        lastDate = ""
+        for long in result:
+            dateSplit = str(long[2]).split(" ")
+
+            if lastDate == "":
+                lastDate = dateSplit[0]
+                subT += float(long[0]) - float(long[1])
+            elif lastDate == dateSplit[0]:
+                subT += float(long[0]) - float(long[1])
+            elif lastDate != dateSplit[0]:
+                incomeAp.append(subT)
+                date.append(lastDate)
+                lastDate = dateSplit[0]
+                subT += float(long[0]) - float(long[1])
+        
+        incomeAp.append(subT)
+        date.append(lastDate)
+
+        data = [incomeAp, date]
+        print(incomeAp)
+        print(date)
+
+        return data
+
     def deleteUser(self, username):
         sql = "DROP TABLE `%s`" % username
         self.cursor.execute(sql)

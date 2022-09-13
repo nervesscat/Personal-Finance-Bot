@@ -1,9 +1,11 @@
 from database_conn import DataBase
+from graphics import Graphics
 
 class Functions:
 
     def __init__(self):
         self.db = DataBase()
+        self.graph = Graphics()
 
     def createUser(self, username):
         
@@ -64,6 +66,7 @@ class Functions:
 
         except Exception as e:
             print("Error getting balance")
+            self.db.rollback()
             return "Error getting balance"
 
         finally:
@@ -75,6 +78,7 @@ class Functions:
             self.db.update_balance(username, income, expense)
         except Exception as e:
             print("Error updating balance:", e)
+            self.db.rollback()
         finally:
             self.db.commit()
 
@@ -86,6 +90,18 @@ class Functions:
             self.db.rollback()
         finally:
             self.db.commit()
+
+    def getGraph(self, username):
+        try:
+            data = self.db.get_mensual_balance(username)
+            image = self.graph.plot(data)
+
+        except Exception as e:
+            print("Error getting graph:", e)
+            self.db.rollback()
+        finally:
+            self.db.commit()
+            return image
         
         
 

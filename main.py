@@ -62,13 +62,17 @@ async def on_message(message):
 
         await message.channel.send(dbMessage)
 
-    elif message.content.startswith('!history'):
+    elif message.content.startswith('!graph'):
 
-        await message.channel.send('Function not available yet')
+        user = message.author.id
+
+        dbMessage = func.getGraph(user)
+
+        await message.channel.send(file=discord.File('plot.png'))
 
     elif message.content.startswith('!help'):
 
-        await message.channel.send('!create - Create a new account\n!income [amount] [description] - Add income\n!expense [amount] [description] - Add expense\n!balance - Get your balance\n!history - Get your history')
+        await message.channel.send('!create - Create a new account\n!income [amount] [description] - Add income\n!expense [amount] [description] - Add expense\n!balance - Get your balance\n!history - Get your history\n!graph - Get your graph')
 
     elif message.content.startswith('!delete'):
 
