@@ -93,15 +93,14 @@ class Functions:
 
     def getGraph(self, username):
         try:
-            data = self.db.get_mensual_balance(username)
-            image = self.graph.plot(data)
+            balance, income, expense = self.db.get_mensual_balance(username)
+            self.graph.plot(balance, income, expense)
 
         except Exception as e:
             print("Error getting graph:", e)
             self.db.rollback()
         finally:
             self.db.commit()
-            return image
         
         
 

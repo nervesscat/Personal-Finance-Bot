@@ -1,3 +1,4 @@
+from re import sub
 import pymysql
 
 class DataBase:
@@ -52,6 +53,9 @@ class DataBase:
         return
 
     def get_mensual_balance(self, username):
+
+        #Get the total balance
+
         sql = "SELECT `income`, `expense`, date FROM `%s`" % username
         self.cursor.execute(sql)
         result = self.cursor.fetchall()
@@ -76,11 +80,71 @@ class DataBase:
         incomeAp.append(subT)
         date.append(lastDate)
 
-        data = [incomeAp, date]
-        print(incomeAp)
-        print(date)
+        balance = [incomeAp, date]
 
-        return data
+        #Get the total income
+
+        sql = "SELECT `income`, date FROM `%s` WHERE expense = '0'" % username
+        self.cursor.execute(sql)
+        result = self.cursor.fetchall()
+
+        incomeT = []
+        dateIncome = []
+        subT = 0
+        lastDate = ""
+
+        for long in result:
+            dateSplit = str(long[1]).split(" ")
+
+            if lastDate == "":
+                lastDate = dateSplit[0]
+                subT += float(long[0])
+            elif lastDate == dateSplit[0]:
+                subT += float(long[0])
+            elif lastDate != dateSplit[0]:
+                incomeT.append(subT)
+                dateIncome.append(lastDate)
+                subT = 0
+                lastDate = dateSplit[0]
+                subT += float(long[0])
+
+        incomeT.append(subT)
+        dateIncome.append(lastDate)
+
+        income = [incomeT, dateIncome]
+        
+        #Get the total expense
+
+        sql = "SELECT `expense`, date FROM `%s` WHERE income = '0'" % username
+        self.cursor.execute(sql)
+        result = self.cursor.fetchall()
+
+        expenseT = []
+        dateExpense = []
+        subT = 0
+        lastDate = ""
+
+        for long in result:
+            dateSplit = str(long[1]).split(" ")
+
+            if lastDate == "":
+                lastDate = dateSplit[0]
+                subT += float(long[0])
+            elif lastDate == dateSplit[0]:
+                subT += float(long[0])
+            elif lastDate != dateSplit[0]:
+                expenseT.append(subT)
+                dateExpense.append(lastDate)
+                subT = 0
+                lastDate = dateSplit[0]
+                subT += float(long[0])
+
+        expenseT.append(subT)
+        dateExpense.append(lastDate)
+
+        expense = [expenseT, dateExpense]
+
+        return balance, income, expense
 
     def deleteUser(self, username):
         sql = "DROP TABLE `%s`" % username

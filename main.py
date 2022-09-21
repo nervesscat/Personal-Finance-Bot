@@ -1,4 +1,3 @@
-from cmath import exp
 from functions import Functions
 import discord
 import os
@@ -10,6 +9,8 @@ client = discord.Client(intents=discord.Intents.default())
 
 @client.event
 async def on_message(message):
+
+    user = message.author.id
 
     if message.author == client.user:
         return
@@ -28,7 +29,6 @@ async def on_message(message):
 
         msg = message.content.split(' ')
 
-        user = message.author.id
         income = msg[1]
 
         description = msg[2]
@@ -44,7 +44,6 @@ async def on_message(message):
         
         msg = message.content.split(' ')
 
-        user = message.author.id
         expense = msg[1]
         description = msg[2]
 
@@ -54,25 +53,20 @@ async def on_message(message):
 
         await message.channel.send(dbMessage)
 
+
     elif message.content.startswith('!balance'):
 
-        user = message.author.id
-
-        dbMessage = func.getBalance(user)
+        func.getBalance(user)
 
         await message.channel.send(dbMessage)
 
-    elif message.content.startswith('!graph'):
 
-        user = message.author.id
+    elif message.content.startswith('!graph'):
 
         dbMessage = func.getGraph(user)
 
         await message.channel.send(file=discord.File('plot.png'))
 
-    elif message.content.startswith('!help'):
-
-        await message.channel.send('!create - Create a new account\n!income [amount] [description] - Add income\n!expense [amount] [description] - Add expense\n!balance - Get your balance\n!history - Get your history\n!graph - Get your graph')
 
     elif message.content.startswith('!delete'):
 
@@ -83,5 +77,28 @@ async def on_message(message):
             await message.channel.send('Account deleted')
         else:
             await message.channel.send('Account not deleted')
+
+
+    elif message.content.startswith('!help'):
+
+        #Create an embed message
+
+        embed = discord.Embed(title="Help", description="List of commands", color=0x00ff00)
+
+        embed.add_field(name="!create", value="Create a new account", inline=False)
+
+        embed.add_field(name="!delete", value="Delete an account", inline=False)
+
+        embed.add_field(name="!income", value="Add an income", inline=False)
+
+        embed.add_field(name="!expense", value="Add an expense", inline=False)
+
+        embed.add_field(name="!balance", value="Get your balance", inline=False)
+
+        embed.add_field(name="!graph", value="Get a graph of your expenses", inline=False)
+
+        embed.add_field(name="!help", value="Get a list of commands", inline=False)
+
+        await message.channel.send(embed=embed)
 
 client.run(DISCORD_TOKEN)
