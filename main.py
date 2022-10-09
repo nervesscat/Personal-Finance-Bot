@@ -2,6 +2,8 @@ from functions import Functions
 import discord
 import os
 
+# Build - pyinstaller --onefile -w main.py  
+
 DISCORD_TOKEN = os.environ.get('DISCORD_FINANCE_BOT_TOKEN')
 
 func = Functions()
@@ -11,6 +13,8 @@ client = discord.Client(intents=discord.Intents.default())
 async def on_message(message):
 
     user = message.author.id
+
+    msg = message.content.split(' ')
 
     if message.author == client.user:
         return
@@ -27,11 +31,12 @@ async def on_message(message):
 
     elif message.content.startswith('!income'):
 
-        msg = message.content.split(' ')
-
         income = msg[1]
 
-        description = msg[2]
+        if len(msg) > 2:
+            description = msg[2]
+        else:
+            description = ''
 
         dbMessage = func.addIncome(user, income, description)
 
@@ -41,11 +46,15 @@ async def on_message(message):
     
 
     elif message.content.startswith('!expense'):
-        
-        msg = message.content.split(' ')
+    
 
         expense = msg[1]
-        description = msg[2]
+
+        if len(msg) > 2:
+            description = msg[2]
+        else:
+            description = ''
+    
 
         dbMessage = func.addExpense(user, expense, description)
 
@@ -56,9 +65,13 @@ async def on_message(message):
 
     elif message.content.startswith('!balance'):
 
-        func.getBalance(user)
+        dbMessage = func.getBalance(user)
 
-        await message.channel.send(dbMessage)
+        embed = discord.Embed(title="Balance", description="Shows the total balance", color=0x00ff00)
+
+        embed.add_field(name="Total Balance", value=dbMessage, inline=False)
+
+        await message.channel.send(embed=embed)
 
 
     elif message.content.startswith('!graph'):
