@@ -76,7 +76,12 @@ async def on_message(message):
 
     elif message.content.startswith('!graph'):
 
-        dbMessage = func.getGraph(user)
+        if len(msg) > 1:
+            graphType = msg[1]
+        else:
+            graphType = '-bal'
+
+        dbMessage = func.getGraph(user, graphType)
 
         await message.channel.send(file=discord.File('plot.png'))
 
@@ -108,7 +113,7 @@ async def on_message(message):
 
         embed.add_field(name="!balance", value="Get your balance", inline=False)
 
-        embed.add_field(name="!graph", value="Get a graph of your expenses", inline=False)
+        embed.add_field(name="!graph", value="Get a graph of your incomes, expenses (Use the word -in, -ex, -ba for print only one graph)", inline=False)
 
         embed.add_field(name="!help", value="Get a list of commands", inline=False)
 

@@ -91,10 +91,10 @@ class Functions:
         finally:
             self.db.commit()
 
-    def getGraph(self, username):
+    def getGraph(self, username, option):
         try:
             balance, income, expense = self.db.get_mensual_balance(username)
-            self.graph.plot(balance, income, expense)
+            self.graph.plot(balance, income, expense, option)
 
         except Exception as e:
             print("Error getting graph:", e)
