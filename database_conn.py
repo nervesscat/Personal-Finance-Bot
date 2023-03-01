@@ -1,13 +1,19 @@
 from re import sub
 import pymysql
+import json
 
 class DataBase:
     def __init__(self):
-        self.host = "localhost"
-        self.user = "root"
-        self.password = ""
-        self.db = "personal_finances"
+        #Load config.json
+        jsonFile = open('config.json')
+        config = json.load(jsonFile)
 
+        self.host = config['host']
+        self.user = config['user']
+        self.password = config['password']
+        self.db = config['database']
+
+        #Connect to database
         self.connection = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db)
         self.cursor = self.connection.cursor()
         print("Connected succedfully to database")

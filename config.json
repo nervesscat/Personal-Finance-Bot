@@ -1,0 +1,13 @@
+{
+
+    "token": "Your token here",
+    "env_var" : "DISCORD_FINANCE_BOT_TOKEN",
+
+    "db": {
+        "host": "localhost",
+        "user": "root",
+        "password": "",
+        "database": "personal_finances"
+    }
+
+}

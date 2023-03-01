@@ -1,122 +1,43 @@
-from functions import Functions
-import discord
-import os
-
 # Build - pyinstaller --onefile -w main.py  
 
-DISCORD_TOKEN = os.environ.get('DISCORD_FINANCE_BOT_TOKEN')
+import os
+import json
+import time
 
-func = Functions()
-client = discord.Client(intents=discord.Intents.default())
+from discordMain import DiscordMain
 
-@client.event
-async def on_message(message):
+if __name__ == '__main__':
+    jsonFile = open('config.json')
+    config = json.load(jsonFile)
 
-    user = message.author.id
+    # Load environment variables
+    envVar = config['env_var']
+    DISCORD_TOKEN = os.environ.get(envVar)
 
-    msg = message.content.split(' ')
+    # Try to connect the bot to discord
+    try:
+        DiscordMain.run(DISCORD_TOKEN)
+    except Exception as e:
+        print(e)
+        print('Failed to connect to discord')
+        # Check if the token is valid
+        if e == 'Improper token has been passed.':
+            print('Try to change the token')
+        # Check if is a connection error
+        elif e == 'Connection closed by server':
+            print('Connection error')
+            # Wait 10 seconds and try again
+            time.sleep(60)
+            DiscordMain.run(DISCORD_TOKEN)
+        # Check if is a timeout error
+        elif e == 'Read timed out.':
+            print('Timeout error')
+        # Check if is a invalid token error
+        elif e == '401: Unauthorized':
+            print('Invalid token')
 
-    if message.author == client.user:
-        return
-
-
-    elif message.content.startswith('!create'):
-
-        await message.channel.send('Create a new account')
-
-        dbMessage = func.createUser(message.author.id)
-        
-        await message.channel.send(dbMessage)
-
-
-    elif message.content.startswith('!income'):
-
-        income = msg[1]
-
-        if len(msg) > 2:
-            description = msg[2]
-        else:
-            description = ''
-
-        dbMessage = func.addIncome(user, income, description)
-
-        func.updateBalance(user, float(income), 0)  
-
-        await message.channel.send(dbMessage)  
-    
-
-    elif message.content.startswith('!expense'):
-    
-
-        expense = msg[1]
-
-        if len(msg) > 2:
-            description = msg[2]
-        else:
-            description = ''
-    
-
-        dbMessage = func.addExpense(user, expense, description)
-
-        func.updateBalance(user, 0, float(expense))
-
-        await message.channel.send(dbMessage)
+    except KeyboardInterrupt:
+        print('Program stopped by user')
+        jsonFile.close()
 
 
-    elif message.content.startswith('!balance'):
-
-        dbMessage = func.getBalance(user)
-
-        embed = discord.Embed(title="Balance", description="Shows the total balance", color=0x00ff00)
-
-        embed.add_field(name="Total Balance", value=dbMessage, inline=False)
-
-        await message.channel.send(embed=embed)
-
-
-    elif message.content.startswith('!graph'):
-
-        if len(msg) > 1:
-            graphType = msg[1]
-        else:
-            graphType = '-bal'
-
-        dbMessage = func.getGraph(user, graphType)
-
-        await message.channel.send(file=discord.File('plot.png'))
-
-
-    elif message.content.startswith('!delete'):
-
-        await message.channel.send('Are you sure you want to delete your account? (y/n)')
-        msg = await client.wait_for('message', check=lambda message: message.author == message.author)
-        if msg.content == 'y':
-            func.deleteUser(message.author.id)
-            await message.channel.send('Account deleted')
-        else:
-            await message.channel.send('Account not deleted')
-
-
-    elif message.content.startswith('!help'):
-
-        #Create an embed message
-
-        embed = discord.Embed(title="Help", description="List of commands", color=0x00ff00)
-
-        embed.add_field(name="!create", value="Create a new account", inline=False)
-
-        embed.add_field(name="!delete", value="Delete an account", inline=False)
-
-        embed.add_field(name="!income", value="Add an income", inline=False)
-
-        embed.add_field(name="!expense", value="Add an expense", inline=False)
-
-        embed.add_field(name="!balance", value="Get your balance", inline=False)
-
-        embed.add_field(name="!graph", value="Get a graph of your incomes, expenses (Use the word -in, -ex, -ba for print only one graph)", inline=False)
-
-        embed.add_field(name="!help", value="Get a list of commands", inline=False)
-
-        await message.channel.send(embed=embed)
-
-client.run(DISCORD_TOKEN)
