@@ -20,12 +20,33 @@ class DiscordMain:
 
             elif message.content.startswith('!create'):
 
-                await message.channel.send('Create a new account')
+                await message.channel.send('Create a new account\nPlease select a currency')
 
-                dbMessage = func.createUser(message.author.id)
-                
-                await message.channel.send(dbMessage)
+                # Create a menu with the currencies
+                embed = discord.Embed(title="Currencies", description="Select a currency", color=0x00ff00)
 
+                embed.add_field(name="1", value="EUR", inline=False)
+                embed.add_field(name="2", value="USD", inline=False)
+                embed.add_field(name="3", value="Pound", inline=False)
+                embed.add_field(name="4", value="LPS", inline=False)
+                await message.channel.send(embed=embed)
+
+                # Wait for the user to select a currency
+                msg = await client.wait_for('message', check=lambda message: message.author == message.author)
+
+                # If the user selects a currency, create the account
+                if msg.content == '1':
+                    dbMessage = func.createUser(message.author.id, 'EUR')
+                    await message.channel.send(dbMessage)
+                elif msg.content == '2':
+                    dbMessage = func.createUser(message.author.id, 'USD')
+                    await message.channel.send(dbMessage)
+                elif msg.content == '3':
+                    dbMessage = func.createUser(message.author.id, 'Pound')
+                    await message.channel.send(dbMessage)
+                elif msg.content == '4':
+                    dbMessage = func.createUser(message.author.id, 'LPS')
+                    await message.channel.send(dbMessage)
 
             elif message.content.startswith('!income'):
 
@@ -38,13 +59,10 @@ class DiscordMain:
 
                 dbMessage = func.addIncome(user, income, description)
 
-                func.updateBalance(user, float(income), 0)  
-
                 await message.channel.send(dbMessage)  
             
 
             elif message.content.startswith('!expense'):
-            
 
                 expense = msg[1]
 
@@ -52,11 +70,8 @@ class DiscordMain:
                     description = msg[2]
                 else:
                     description = ''
-            
 
                 dbMessage = func.addExpense(user, expense, description)
-
-                func.updateBalance(user, 0, float(expense))
 
                 await message.channel.send(dbMessage)
 
@@ -64,6 +79,10 @@ class DiscordMain:
             elif message.content.startswith('!balance'):
 
                 dbMessage = func.getBalance(user)
+
+                if dbMessage == "User doesn't exist" :
+                    await message.channel.send(dbMessage)
+                    return
 
                 embed = discord.Embed(title="Balance", description="Shows the total balance", color=0x00ff00)
 
@@ -81,7 +100,10 @@ class DiscordMain:
 
                 dbMessage = func.getGraph(user, graphType)
 
-                await message.channel.send(file=discord.File('plot.png'))
+                if dbMessage == "User doesn't exist" :
+                    await message.channel.send(dbMessage)
+                elif dbMessage == 'Graph created':
+                    await message.channel.send(file=discord.File('plot.png'))
 
 
             elif message.content.startswith('!delete'):
@@ -89,8 +111,8 @@ class DiscordMain:
                 await message.channel.send('Are you sure you want to delete your account? (y/n)')
                 msg = await client.wait_for('message', check=lambda message: message.author == message.author)
                 if msg.content == 'y':
-                    func.deleteUser(message.author.id)
-                    await message.channel.send('Account deleted')
+                    dbMessage = func.deleteUser(message.author.id)
+                    await message.channel.send(dbMessage)
                 else:
                     await message.channel.send('Account not deleted')
 

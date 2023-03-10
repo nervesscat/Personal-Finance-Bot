@@ -7,7 +7,7 @@ class Functions:
         self.db = DataBase()
         self.graph = Graphics()
 
-    def createUser(self, username):
+    def createUser(self, username, currency):
         
         try:
             self.db.check_user(username)
@@ -16,7 +16,7 @@ class Functions:
         except Exception as e:
             
             try:
-                self.db.create_user(username)
+                self.db.create_user(username, currency)
             
             except Exception as e:
                 self.db.rollback()
@@ -32,48 +32,62 @@ class Functions:
     def addIncome(self, username, income, description):
 
         try:
+            self.db.check_user(username)
             self.db.add_column(username, income, 0, description)
-            print("Income added")
-            self.db.commit()
-            balance = self.db.get_balance(username)
-            self.db.update_balance(username, income, 0, balance)
+            self.updateBalance(username, float(income), 0)
+            return "Income added"
 
         except Exception as e:
             self.db.rollback()
-            return "Error adding income, please try again or later"
+            err = str(e).split(',')[0]
+            if err == "(1146":
+                return "User doesn't exist"
+            else:
+                return "Error adding income, please try again or later"
 
         finally:
             self.db.commit()
-            return "Income added"
 
     def addExpense(self, username, expense, description):
 
         try:
+            self.db.check_user(username)
             self.db.add_column(username, 0, expense, description)
+            self.updateBalance(username, 0, float(expense))
+            return "Expense added"
 
         except Exception as e:
             self.db.rollback()
-            return "Error adding expense, please try again or later"
+            err = str(e).split(',')[0]
+            if err == "(1146":
+                return "User doesn't exist"
+            else:
+                return "Error adding expense, please try again or later"
 
         finally:
             self.db.commit()
-            return "Expense added"
 
     def getBalance(self, username):
 
         try:
+            self.db.check_user(username)
             balance = self.db.get_balance(username)
+            return balance
 
         except Exception as e:
-            print("Error getting balance")
             self.db.rollback()
-            return "Error getting balance"
+            print(e)
+            err=str(e).split(',')[0]
+            if err == "(1146":
+                return "User doesn't exist"
+            else:
+                return "Error getting balance please try again or later"
 
         finally:
             self.db.commit()
-            return balance
     
     def updateBalance(self, username, income, expense):
+
         try:
             self.db.update_balance(username, income, expense)
         except Exception as e:
@@ -83,22 +97,39 @@ class Functions:
             self.db.commit()
 
     def deleteUser(self, username):
+
         try:
+            self.db.check_user(username)
             self.db.deleteUser(username)
+            return "User deleted"
         except Exception as e:
-            print("Error deleting user:", e)
             self.db.rollback()
+            err = str(e).split(',')[0]
+            if err == "(1146":
+                return "User doesn't exist"
+            else:
+                return "Error deleting user, please try again or later"
         finally:
             self.db.commit()
 
     def getGraph(self, username, option):
-        try:
-            balance, income, expense = self.db.get_mensual_balance(username)
-            self.graph.plot(balance, income, expense, option)
 
+        try:
+            # Check if the user exists
+            self.db.check_user(username)
+            balance, income, expense = self.db.get_mensual_balance(username)
+            currency = self.db.checkCurrency(username)
+            self.graph.plot(balance, income, expense, option, currency)
+            return 'Graph created'
         except Exception as e:
-            print("Error getting graph:", e)
             self.db.rollback()
+            err = str(e).split(',')[0]
+            print(err)
+            if err == "(1146":
+                return "User doesn't exist"
+            else:
+                return 'Error'
+            
         finally:
             self.db.commit()
         

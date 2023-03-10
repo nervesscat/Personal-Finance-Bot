@@ -5,13 +5,17 @@ import json
 class DataBase:
     def __init__(self):
         #Load config.json
+        
         jsonFile = open('config.json')
         config = json.load(jsonFile)
 
-        self.host = config['host']
-        self.user = config['user']
-        self.password = config['password']
-        self.db = config['database']
+        #Get database info
+        self.database = config['db']
+
+        self.host = self.database['host']
+        self.user = self.database['user']
+        self.password = self.database['password']
+        self.db = self.database['db_name']
 
         #Connect to database
         self.connection = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db)
@@ -23,12 +27,15 @@ class DataBase:
         sql = "SELECT * FROM `%s`" % self.user
         self.cursor.execute(sql)
 
-    def create_user(self, username):
+    def create_user(self, username, currency):
         sql = "CREATE TABLE `%s` (id INT AUTO_INCREMENT PRIMARY KEY, income DECIMAL, expense DECIMAL, date datetime DEFAULT CURRENT_TIMESTAMP, description VARCHAR(255))" % username
         self.cursor.execute(sql)
-        #Create a column in balance_users table
+        # Create a column in balance_users table
         sql = "INSERT INTO `balance_users` (`user`, `balance`, `total_income`, `total_expense`) VALUES ('%s', '0', '0', '0')" % username
         self.cursor.execute(sql)
+        # Create a column in currency table
+        sql = "INSERT INTO `currency` (`id`, `currency`) VALUES ('%s', '%s')" % (username, currency)
+        self.cursor.execute(sql)    
 
     def add_column(self, username, income, expense, description):
         sql = "INSERT INTO `%s` (`income`, `expense`, `description`) VALUES ('%s', '%s', '%s')" % (username, income, expense, description)
@@ -157,7 +164,15 @@ class DataBase:
         self.cursor.execute(sql)
         sql = "DELETE FROM `balance_users` WHERE `user` = '%s'" % username
         self.cursor.execute(sql)
+        sql = "DELETE FROM `currency` WHERE `id` = '%s'" % username
+        self.cursor.execute(sql)
         print("User deleted")
+
+    def checkCurrency(self, username):
+        sql = "SELECT `currency` FROM `currency` WHERE `id` = '%s'" % username
+        self.cursor.execute(sql)
+        result = self.cursor.fetchall()
+        return result[0][0]
 
     def commit(self):
         self.connection.commit()
