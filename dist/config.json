@@ -1,5 +1,6 @@
 {
     "env_var" : "DISCORD_FINANCE_BOT_TOKEN",
+    "open-ai": "OPENAI_API_KEY",
 
     "db": {
         "host": "localhost",

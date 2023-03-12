@@ -1,3 +1,4 @@
+from chooseCategory import Category
 from re import sub
 import pymysql
 import json
@@ -22,13 +23,16 @@ class DataBase:
         self.cursor = self.connection.cursor()
         print("Connected succedfully to database")
 
+        # OpenAI
+        self.category = Category()
+
     def check_user(self, username):
         self.user = str(username)
         sql = "SELECT * FROM `%s`" % self.user
         self.cursor.execute(sql)
 
     def create_user(self, username, currency):
-        sql = "CREATE TABLE `%s` (id INT AUTO_INCREMENT PRIMARY KEY, income DECIMAL, expense DECIMAL, date datetime DEFAULT CURRENT_TIMESTAMP, description VARCHAR(255))" % username
+        sql = "CREATE TABLE `%s` (id INT AUTO_INCREMENT PRIMARY KEY, income DECIMAL, expense DECIMAL, date datetime DEFAULT CURRENT_TIMESTAMP, description VARCHAR(255), category VARCHAR(10))" % username
         self.cursor.execute(sql)
         # Create a column in balance_users table
         sql = "INSERT INTO `balance_users` (`user`, `balance`, `total_income`, `total_expense`) VALUES ('%s', '0', '0', '0')" % username
@@ -38,7 +42,11 @@ class DataBase:
         self.cursor.execute(sql)    
 
     def add_column(self, username, income, expense, description):
-        sql = "INSERT INTO `%s` (`income`, `expense`, `description`) VALUES ('%s', '%s', '%s')" % (username, income, expense, description)
+        if expense != 0:
+            category = self.category.chooseCategory(description)
+            sql = "INSERT INTO `%s` (`income`, `expense`, `description`, `category`) VALUES ('%s', '%s', '%s', '%s')" % (username, income, expense, description, category)
+        else:
+            sql = "INSERT INTO `%s` (`income`, `expense`, `description`) VALUES ('%s', '%s', '%s')" % (username, income, expense, description)
         self.cursor.execute(sql)
 
     def get_balance(self, username):
@@ -46,7 +54,6 @@ class DataBase:
         self.cursor.execute(sql)
         result = self.cursor.fetchall()
         result = result[0][0]
-        print("Balance: %s" % result)
         return result
 
     def update_balance(self, username, income, expense):

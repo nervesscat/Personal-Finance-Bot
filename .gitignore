@@ -5,7 +5,6 @@
 .spec
 main.spec
 dist/plot.png
-dist/main.exe
 build/main/localpycs/struct.pyc
 build/main/localpycs/pyimod03_ctypes.pyc
 build/main/xref-main.html
