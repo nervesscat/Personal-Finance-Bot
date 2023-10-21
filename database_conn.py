@@ -27,38 +27,42 @@ class DataBase:
         self.category = Category()
 
     def check_user(self, username):
-        self.user = str(username)
-        sql = "SELECT * FROM `%s`" % self.user
-        self.cursor.execute(sql)
+        query = "SELECT * FROM users WHERE username = %s"
+        self.cursor.execute(query, (username))
+        result = self.cursor.fetchone()
+        if result:
+            return True
+        else:
+            return False
 
     def create_user(self, username, currency):
-        sql = "CREATE TABLE `%s` (id INT AUTO_INCREMENT PRIMARY KEY, income DECIMAL, expense DECIMAL, date datetime DEFAULT CURRENT_TIMESTAMP, description VARCHAR(255), category VARCHAR(10))" % username
-        self.cursor.execute(sql)
+        query = "CREATE TABLE `%s` (id INT AUTO_INCREMENT PRIMARY KEY, income DECIMAL, expense DECIMAL, date datetime DEFAULT CURRENT_TIMESTAMP, description VARCHAR(255), category VARCHAR(10))"
+        self.cursor.execute(query, (username,))
         # Create a column in balance_users table
-        sql = "INSERT INTO `balance_users` (`user`, `balance`, `total_income`, `total_expense`) VALUES ('%s', '0', '0', '0')" % username
-        self.cursor.execute(sql)
+        sql = "INSERT INTO `balance_users` (`user`, `balance`, `total_income`, `total_expense`) VALUES (%s, '0', '0', '0')"
+        self.cursor.execute(sql, (username,))
         # Create a column in currency table
-        sql = "INSERT INTO `currency` (`id`, `currency`) VALUES ('%s', '%s')" % (username, currency)
-        self.cursor.execute(sql)    
+        sql = "INSERT INTO `currency` (`id`, `currency`) VALUES (%s, %s)"
+        self.cursor.execute(sql, (username, currency))  
 
     def add_column(self, username, income, expense, description):
         if expense != 0:
             category = self.category.chooseCategory(description)
-            sql = "INSERT INTO `%s` (`income`, `expense`, `description`, `category`) VALUES ('%s', '%s', '%s', '%s')" % (username, income, expense, description, category)
+            sql = "INSERT INTO `%s` (`income`, `expense`, `description`, `category`) VALUES ('0', '%s', '%s', '%s')"
         else:
-            sql = "INSERT INTO `%s` (`income`, `expense`, `description`) VALUES ('%s', '%s', '%s')" % (username, income, expense, description)
-        self.cursor.execute(sql)
+            sql = "INSERT INTO `%s` (`income`, `expense`, `description`) VALUES ('%s', '0', '%s')"
+        self.cursor.execute(sql, (username, income, expense, description, category))
 
     def get_balance(self, username):
-        sql = "SELECT `balance` FROM `balance_users` WHERE `user` = %s" % username
-        self.cursor.execute(sql)
+        sql = "SELECT `balance` FROM `balance_users` WHERE `user` = %s"
+        self.cursor.execute(sql, (username))
         result = self.cursor.fetchall()
         result = result[0][0]
         return result
 
     def update_balance(self, username, income, expense):
-        sql = "SELECT `balance`, `total_income`, `total_expense` FROM `balance_users` WHERE `user` = '%s'" % username
-        self.cursor.execute(sql)
+        sql = "SELECT `balance`, `total_income`, `total_expense` FROM `balance_users` WHERE `user` = %s"
+        self.cursor.execute(sql, (username,))
         result = self.cursor.fetchall()
         balance = float(result[0][0])
         total_income = float(result[0][1])
@@ -68,16 +72,13 @@ class DataBase:
         total_income += income
         total_expense += expense
         print("Balance: %s" % result, "Income: %s" % income, "Expense: %s" % expense)
-        sql = "UPDATE `balance_users` SET `balance`='%s',`total_income`='%s',`total_expense`='%s' WHERE user = '%s'" % (result, total_income, total_expense, username)
-        self.cursor.execute(sql)
-        return
+        sql = "UPDATE `balance_users` SET `balance`=%s,`total_income`=%s,`total_expense`=%s WHERE user = %s"
+        self.cursor.execute(sql, (result, total_income, total_expense, username))
+        return result
 
     def get_mensual_balance(self, username):
-
-        #Get the total balance
-
-        sql = "SELECT `income`, `expense`, date FROM `%s`" % username
-        self.cursor.execute(sql)
+        sql = "SELECT `income`, `expense`, date FROM `%s`"
+        self.cursor.execute(sql, (username,))
         result = self.cursor.fetchall()
         incomeAp = []
         date = []
@@ -104,8 +105,8 @@ class DataBase:
 
         #Get the total income
 
-        sql = "SELECT `income`, date FROM `%s` WHERE expense = '0'" % username
-        self.cursor.execute(sql)
+        sql = "SELECT `income`, date FROM `%s` WHERE expense = '0'"
+        self.cursor.execute(sql, (username,))
         result = self.cursor.fetchall()
 
         incomeT = []
@@ -135,8 +136,8 @@ class DataBase:
         
         #Get the total expense
 
-        sql = "SELECT `expense`, date FROM `%s` WHERE income = '0'" % username
-        self.cursor.execute(sql)
+        sql = "SELECT `expense`, date FROM `%s` WHERE income = '0'"
+        self.cursor.execute(sql, (username,))
         result = self.cursor.fetchall()
 
         expenseT = []
@@ -167,17 +168,17 @@ class DataBase:
         return balance, income, expense
 
     def deleteUser(self, username):
-        sql = "DROP TABLE `%s`" % username
-        self.cursor.execute(sql)
-        sql = "DELETE FROM `balance_users` WHERE `user` = '%s'" % username
-        self.cursor.execute(sql)
-        sql = "DELETE FROM `currency` WHERE `id` = '%s'" % username
-        self.cursor.execute(sql)
+        sql = "DROP TABLE `%s`"
+        self.cursor.execute(sql, (username,))
+        sql = "DELETE FROM `balance_users` WHERE `user` = '%s'"
+        self.cursor.execute(sql, (username,))
+        sql = "DELETE FROM `currency` WHERE `id` = '%s'"
+        self.cursor.execute(sql, (username,))
         print("User deleted")
 
     def checkCurrency(self, username):
-        sql = "SELECT `currency` FROM `currency` WHERE `id` = '%s'" % username
-        self.cursor.execute(sql)
+        sql = "SELECT `currency` FROM `currency` WHERE `id` = '%s'"
+        self.cursor.execute(sql, (username,))
         result = self.cursor.fetchall()
         return result[0][0]
 
